@@ -8,12 +8,15 @@ package presentimer;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -23,6 +26,7 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 
 /**
@@ -70,12 +74,13 @@ public class PresentationTimer {
 			}
 			new PresentationTimer(newAlarmTime, formatters, backColor);
 		} else {
-			new PresentationTimer(new int[] { 10, 20, 30}, FormatterFactory.getDefaultFormatter(), null);
+			new PresentationTimer(new int[] { 600, 900, 1200 }, FormatterFactory.getDefaultFormatter(), null);
 		}
 	}
 
 	private Chime chime;
 	private int[] alarmTime;
+	private JLabel alarmTimeLabel;
 	private JLabel currentTimeLabel;
 	private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private ScheduledFuture<?> scheduleHandle = null;
@@ -104,10 +109,17 @@ public class PresentationTimer {
         base.setLayout(new BorderLayout());
         frame.setContentPane(base);
 
+        JPanel captionAndConfig = new JPanel();
+        captionAndConfig.setLayout(new BorderLayout());
         JPanel caption = new JPanel();
-        caption.add(createTimingLabel());
-        base.add(caption, BorderLayout.NORTH);
-
+        caption.setLayout(new FlowLayout());
+        alarmTimeLabel = new JLabel();
+        caption.add(alarmTimeLabel);
+        updateAlarmTimeLabel();
+        captionAndConfig.add(caption, BorderLayout.CENTER);
+        captionAndConfig.add(createConfigPanel(), BorderLayout.NORTH);
+        base.add(captionAndConfig, BorderLayout.NORTH);
+        
         JPanel buttons = new JPanel();
         base.add(buttons, BorderLayout.SOUTH);
         buttons.setLayout(new GridLayout(1, 2));
@@ -126,6 +138,61 @@ public class PresentationTimer {
         frame.pack();
         frame.setVisible(true);
 	}	
+	
+	private JPanel createConfigPanel() {
+        JPanel configPanel = new JPanel();
+        configPanel.setLayout(new FlowLayout());
+        configPanel.add(new JLabel("Alarm Time (sec.): 1st"));
+        JTextField first = new JTextField(Integer.toString(alarmTime[0]), 4);
+        configPanel.add(first);
+		configPanel.add(new JLabel("2nd"));
+		JTextField second = new JTextField(Integer.toString(alarmTime[1]), 4);
+		configPanel.add(second);
+		configPanel.add(new JLabel("3rd"));
+		JTextField third = new JTextField(Integer.toString(alarmTime[2]), 4);
+		configPanel.add(third);
+
+		FocusListener selectAllWhenFocused = new FocusListener() {
+			
+			/**
+			 * Select all text when selected
+			 */
+			@Override
+			public void focusGained(FocusEvent e) {
+				JTextField field = (JTextField)e.getComponent();
+				field.selectAll();
+			}
+			
+			
+			private int getInt(String text, int minimum) {
+				try {
+					int t = Integer.parseInt(text);
+					if (t >= minimum) {
+						return t;
+					} else {
+						return minimum;
+					}
+				} catch (NumberFormatException e) {
+					return minimum;
+				}
+			}
+			/**
+			 * Update alarm time 
+			 */
+			@Override
+			public void focusLost(FocusEvent e) {
+				alarmTime[0] = getInt(first.getText(), 0);
+				alarmTime[1] = getInt(second.getText(), alarmTime[0]);
+				alarmTime[2] = getInt(third.getText(), alarmTime[1]);
+				updateAlarmTimeLabel();
+			}
+		};
+        first.addFocusListener(selectAllWhenFocused);
+        second.addFocusListener(selectAllWhenFocused);
+        third.addFocusListener(selectAllWhenFocused);
+		
+		return configPanel;
+	}
 	
 	private JButton createStartStopButton() {
 		final JButton startStopButton = new JButton("Start");
@@ -184,8 +251,7 @@ public class PresentationTimer {
 		return label;
 	}
 	
-	public JLabel createTimingLabel() {
-		JLabel timingLabel = new JLabel();
+	public void updateAlarmTimeLabel() {
 		StringBuilder timeBuf = new StringBuilder(); 
 		timeBuf.append("1st bell = ");
 		timeBuf.append(TimeUtil.secondsToMinutes(alarmTime[0]));
@@ -193,8 +259,7 @@ public class PresentationTimer {
 		timeBuf.append(TimeUtil.secondsToMinutes(alarmTime[1]));
 		timeBuf.append(",  3rd bell = ");
 		timeBuf.append(TimeUtil.secondsToMinutes(alarmTime[2]));
-		timingLabel.setText(timeBuf.toString());
-		return timingLabel;
+		alarmTimeLabel.setText(timeBuf.toString());
 	}
 	
 	/**
