@@ -39,7 +39,7 @@ JAR ファイルのダブルクリックで実行できます．デフォルト�
 以下はコマンドライン引数の例です．
 
 ```
-java -jar PresentationTimer-1.0.0.jar 60 120 180 12d3U black/green/red<
+java -jar PresentationTimer-1.0.0.jar 60 120 180 12d3U black/green/red
 ```
 
 この例では，60秒，120秒，180秒でベルを鳴らし，
