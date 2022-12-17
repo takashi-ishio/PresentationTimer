@@ -1,8 +1,3 @@
-/*
- * Copyright (C) 2010 Takashi Ishio All Rights Reserved.
- * Licensed under the MIT license: 
- * http://www.opensource.org/licenses/mit-license.php
- */
 package presentimer;
 
 import java.awt.Color;
